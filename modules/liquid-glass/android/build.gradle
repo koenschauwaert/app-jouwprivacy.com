@@ -1,0 +1,27 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'com.jouwprivacy.liquidglass'
+version = '0.0.1'
+
+android {
+  namespace 'com.jouwprivacy.liquidglass'
+  defaultConfig {
+    versionCode 1
+    versionName '0.0.1'
+  }
+}
+
+repositories {
+  mavenCentral()
+}
+
+dependencies {
+  // Android imitation of iOS 26 liquid glass (real refraction + dispersion).
+  // GPU AGSL / RenderEffect; renders transparent below API 33 (no crash).
+  // Pinned to 1.0.3: it has the identical public API but no compileSdk
+  // constraint, whereas 1.0.4+ demand compileSdk 37 (newer AGP + SDK platform).
+  implementation 'com.qmdeve.liquidglass:core:1.0.3'
+}

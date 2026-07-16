@@ -1,0 +1,34 @@
+node_modules/
+.expo/
+dist/
+web-build/
+# Local AAB/APK build artifacts (build/android/*.aab)
+/build/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
+# Prebuild-generated native projects (anchored so local Expo modules under
+# modules/*/android keep their committed native source).
+/ios/
+/android/
+# Local Expo modules: track native source, ignore gradle build output.
+modules/*/android/build/
+modules/*/android/.cxx/
+
+# Editor / local tooling (never part of the public app)
+.idea/
+.vscode/
+
+# Signing material & store credentials - never commit (world-readable repo)
+credentials.json
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+

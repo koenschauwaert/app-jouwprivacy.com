@@ -1,0 +1,22 @@
+diff --git a/node_modules/expo-liquid-glass-view/ios/ExpoLiquidGlassView.swift b/node_modules/expo-liquid-glass-view/ios/ExpoLiquidGlassView.swift
+index 08e5507..528a2d5 100644
+--- a/node_modules/expo-liquid-glass-view/ios/ExpoLiquidGlassView.swift
++++ b/node_modules/expo-liquid-glass-view/ios/ExpoLiquidGlassView.swift
+@@ -33,7 +33,7 @@ struct ExpoLiquidGlassView: ExpoSwiftUI.View, ExpoSwiftUI.WithHostingView {
+                     style: getCornerRadiusStyle(from: props.cornerStyle)
+                 )
+                 .fill(Color.clear)
+-                .frame(width: 100, height: 100)
++                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                 .glassEffect(
+                     getGlassEffect(
+                         from: props.type,
+@@ -55,7 +55,7 @@ struct ExpoLiquidGlassView: ExpoSwiftUI.View, ExpoSwiftUI.WithHostingView {
+                     style: getCornerRadiusStyle(from: props.cornerStyle)
+                 )
+                 .fill(Color.clear)
+-                .frame(width: 100, height: 100)
++                .frame(maxWidth: .infinity, maxHeight: .infinity)
+             }
+         }
+     }

@@ -1,0 +1,75 @@
+JouwPrivacy customer app
+Copyright 2026 Overnight Technology
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+------------------------------------------------------------------------------
+Trade names and brand assets - NOT covered by the Apache-2.0 grant
+Handelsnamen en merkmateriaal - NIET gedekt door de Apache-2.0-licentie
+------------------------------------------------------------------------------
+
+[EN]
+The Apache-2.0 license above covers the SOURCE CODE of this repository only.
+
+The following are trade names and brand assets of Overnight Technology and are
+NOT licensed for reuse under Apache-2.0 (or otherwise):
+
+  - The trade names "JouwPrivacy" and "Overnight Technology".
+  - The JouwPrivacy logo, app icon, and adaptive-icon assets in `assets/`
+    (icon.png, adaptive-icon*.png, logo.png) and any derivatives.
+
+The application/bundle identifiers `com.jouwprivacy.app` and the `jouwprivacy`
+URL scheme are our published identifiers. You must not ship a build that reuses
+them, so store listings and deep links can't be confused with the official app.
+
+If you fork or redistribute this app, you MUST:
+
+  1. Replace the name and all brand/logo/icon assets with your own.
+  2. Change the iOS bundle identifier and Android package name
+     (`com.jouwprivacy.app`), the URL scheme, and the Expo `slug` in `app.json`.
+
+This protects users from confusing an unofficial build with the official
+JouwPrivacy app. The code is open; the brand is not.
+
+[NL]
+De bovenstaande Apache-2.0-licentie dekt uitsluitend de BRONCODE van deze
+repository.
+
+Het volgende betreft handelsnamen en merkmateriaal van Overnight Technology en
+wordt NIET in licentie gegeven voor hergebruik onder Apache-2.0 (of anderszins):
+
+  - De handelsnamen "JouwPrivacy" en "Overnight Technology".
+  - Het JouwPrivacy-logo, het app-icoon en het adaptive-icon-materiaal in
+    `assets/` (icon.png, adaptive-icon*.png, logo.png) en alle afgeleiden daarvan.
+
+De applicatie-/bundle-identifiers `com.jouwprivacy.app` en het `jouwprivacy`
+URL-schema zijn onze gepubliceerde identifiers. Je mag geen build uitbrengen die
+deze hergebruikt, zodat winkelvermeldingen en deeplinks niet met de officiële
+app kunnen worden verward.
+
+Als je deze app forkt of herdistribueert, MOET je:
+
+  1. De naam en al het merk-/logo-/icoonmateriaal vervangen door je eigen materiaal.
+  2. De iOS bundle identifier en Android package-naam (`com.jouwprivacy.app`), het
+     URL-schema en de Expo `slug` in `app.json` wijzigen.
+
+Dit voorkomt dat gebruikers een onofficiële build verwarren met de officiële
+JouwPrivacy-app. De code is open; het merk niet.
+
+------------------------------------------------------------------------------
+Third-party components
+------------------------------------------------------------------------------
+
+This app bundles / depends on third-party open-source software, including:
+
+  - expo-liquid-glass-view (MIT) - https://github.com/rit3zh/expo-liquid-glass-view
+  - com.qmdeve.liquidglass:core / AndroidLiquidGlassView (MIT)
+    - https://github.com/QmDeve/AndroidLiquidGlassView
+  - TASA Orbiter font family (SIL Open Font License 1.1) - bundled in
+    assets/fonts/; full license text in assets/fonts/OFL.txt.
+  - Material Symbols (Apache License 2.0) - Google -
+    https://fonts.google.com/icons; bundled as SVGs in assets/icons/ and as
+    path data in src/components/icons/paths.ts.
+
+Other dependencies and their licenses are declared in package.json /
+package-lock.json and retain their respective licenses.

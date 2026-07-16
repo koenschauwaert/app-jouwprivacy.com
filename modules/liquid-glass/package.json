@@ -1,0 +1,10 @@
+{
+  "name": "liquid-glass",
+  "version": "0.0.1",
+  "description": "Local Expo module: Android native liquid-glass (QmDeve) bridge for GlassCard",
+  "main": "index.ts",
+  "private": true,
+  "expo": {
+    "platforms": ["android"]
+  }
+}
