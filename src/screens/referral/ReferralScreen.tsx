@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 
 import { api, isApiClientError } from '@/api';
-import { Referral } from '@/api/contract';
+import { Me, Referral } from '@/api/contract';
 import {
   AsyncBoundary,
   Button,
@@ -23,18 +23,37 @@ const ACCOUNT_HOLDER_MAX = 70;
 
 /** Referral tab. Earned amount, share code, and a payout *request* (manual). */
 export function ReferralScreen() {
-  const { data, loading, error, reload } = useAsync(() => api.getReferral(), []);
+  // Load the referral data and the account's 2FA state in parallel; the payout
+  // confirm gate needs `twoFactorEnabled` to pick TOTP vs. password.
+  const { data, loading, error, reload } = useAsync<[Referral, Me]>(
+    () => Promise.all([api.getReferral(), api.getMe()]),
+    [],
+  );
 
   return (
     <Screen edges={['left', 'right']}>
       <AsyncBoundary loading={loading} error={error} onRetry={reload}>
-        {data && <ReferralContent referral={data} onChanged={reload} />}
+        {data && (
+          <ReferralContent
+            referral={data[0]}
+            twoFactorEnabled={data[1].twoFactorEnabled}
+            onChanged={reload}
+          />
+        )}
       </AsyncBoundary>
     </Screen>
   );
 }
 
-function ReferralContent({ referral, onChanged }: { referral: Referral; onChanged: () => void }) {
+function ReferralContent({
+  referral,
+  twoFactorEnabled,
+  onChanged,
+}: {
+  referral: Referral;
+  twoFactorEnabled: boolean;
+  onChanged: () => void;
+}) {
   const { t, language } = useI18n();
   const [showPayout, setShowPayout] = useState(false);
   const [show2fa, setShow2fa] = useState(false);
@@ -145,6 +164,8 @@ function ReferralContent({ referral, onChanged }: { referral: Referral; onChange
       <TwoFactorConfirmSheet
         visible={show2fa}
         onClose={() => setShow2fa(false)}
+        action="payout"
+        twoFactorEnabled={twoFactorEnabled}
         onConfirmed={submitWithToken}
       />
     </View>

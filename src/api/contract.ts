@@ -30,20 +30,24 @@ export interface LoginRequest {
   password: string;
 }
 
-export interface LoginResponse {
-  mfaRequired: true;
-  mfaToken: string;
-}
-
-export interface TwoFactorRequest {
-  mfaToken: string;
-  totp: string;
-}
-
 export interface Session {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+}
+
+/**
+ * Login outcome (discriminated on `mfaRequired`). An account WITH 2FA gets a
+ * short-lived `mfaToken` to exchange for a session on the 2FA step; an account
+ * WITHOUT 2FA is handed a `session` directly and skips the second screen.
+ */
+export type LoginResponse =
+  | { mfaRequired: true; mfaToken: string }
+  | { mfaRequired: false; session: Session };
+
+export interface TwoFactorRequest {
+  mfaToken: string;
+  totp: string;
 }
 
 export interface RefreshResponse {
@@ -55,6 +59,19 @@ export interface ConfirmResponse {
   confirmationToken: string;
 }
 
+/** Sensitive action a confirmation token authorises; the server requires it. */
+export type ConfirmAction = 'payout' | 'account_patch';
+
+/**
+ * Re-confirmation request. An account WITH 2FA sends `totp` (a TOTP or recovery
+ * code); an account WITHOUT 2FA sends `password`. `action` is always required.
+ */
+export interface ConfirmRequest {
+  action: ConfirmAction;
+  totp?: string;
+  password?: string;
+}
+
 // --- Customer + subscriptions ----------------------------------------------
 
 export interface Me {
@@ -62,6 +79,7 @@ export interface Me {
   displayName: string;
   email: string;
   locale: 'nl' | 'en';
+  twoFactorEnabled: boolean;
 }
 
 export type SubscriptionStatus = 'awaiting_activation' | 'active' | 'lapsed' | 'expired';
@@ -158,6 +176,7 @@ export interface DeliveryInfo {
 export interface Account {
   personal: PersonalInfo;
   delivery: DeliveryInfo;
+  twoFactorEnabled: boolean;
 }
 
 export interface AccountPatch {
@@ -221,9 +240,11 @@ export interface NetworkStatus {
 export interface ApiClient {
   login(req: LoginRequest): Promise<LoginResponse>;
   verifyTwoFactor(req: TwoFactorRequest): Promise<Session>;
+  /** Disable 2FA on the current account. `totp` accepts a TOTP or recovery code. */
+  disableTwoFactor(req: { totp: string }): Promise<void>;
   refresh(refreshToken: string): Promise<RefreshResponse>;
   logout(): Promise<void>;
-  confirm(totp: string): Promise<ConfirmResponse>;
+  confirm(req: ConfirmRequest): Promise<ConfirmResponse>;
 
   getMe(): Promise<Me>;
   getSubscriptions(): Promise<Subscription[]>;

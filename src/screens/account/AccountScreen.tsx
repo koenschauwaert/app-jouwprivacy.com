@@ -9,6 +9,7 @@ import { Account, AccountPatch } from '@/api/contract';
 import {
   AsyncBoundary,
   Button,
+  DisableTwoFactorSheet,
   GlassCard,
   Screen,
   Text,
@@ -54,6 +55,8 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Account>(initial);
   const [show2fa, setShow2fa] = useState(false);
+  const [showDisable2fa, setShowDisable2fa] = useState(false);
+  const [twoFactorDisabled, setTwoFactorDisabled] = useState(false);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,10 +187,38 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
         />
       )}
 
+      {/* Two-factor section: only meaningful for accounts that have 2FA on. No
+          2FA input is rendered anywhere on the screen when it is off. */}
+      {initial.twoFactorEnabled && (
+        <GlassCard variant="subtle">
+          <Text variant="heading">{t('account.twoFactorTitle')}</Text>
+          <Text variant="caption" tone="muted">
+            {t('account.twoFactorEnabledLabel')}
+          </Text>
+          <Button
+            label={t('account.disableTwoFactor')}
+            variant="secondary"
+            onPress={() => setShowDisable2fa(true)}
+          />
+        </GlassCard>
+      )}
+      {twoFactorDisabled && <Text tone="success">{t('account.twoFactorDisabled')}</Text>}
+
       <TwoFactorConfirmSheet
         visible={show2fa}
         onClose={() => setShow2fa(false)}
+        action="account_patch"
+        twoFactorEnabled={initial.twoFactorEnabled}
         onConfirmed={saveWithToken}
+      />
+      <DisableTwoFactorSheet
+        visible={showDisable2fa}
+        onClose={() => setShowDisable2fa(false)}
+        onDisabled={() => {
+          setShowDisable2fa(false);
+          setTwoFactorDisabled(true);
+          onSaved();
+        }}
       />
     </View>
   );

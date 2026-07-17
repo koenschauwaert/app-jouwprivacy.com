@@ -4,6 +4,7 @@ import {
   AccountPatch,
   ApiClient,
   ApiErrorCode,
+  ConfirmRequest,
   ConfirmResponse,
   CreateTicketRequest,
   InvoiceLink,
@@ -220,6 +221,9 @@ export class HttpApiClient implements ApiClient {
     // Validate the shape before it becomes the persisted session.
     return this.request<unknown>('POST', '/auth/2fa', req, false).then(requireSession);
   }
+  disableTwoFactor(req: { totp: string }): Promise<void> {
+    return this.request('POST', '/auth/2fa/disable', req);
+  }
   async refresh(refreshToken: string): Promise<RefreshResponse> {
     const r = await this.request<RefreshResponse>('POST', '/auth/refresh', { refreshToken }, false);
     if (!r || typeof r.accessToken !== 'string' || r.accessToken === '') {
@@ -233,8 +237,8 @@ export class HttpApiClient implements ApiClient {
   logout(): Promise<void> {
     return this.request('POST', '/auth/logout');
   }
-  confirm(totp: string): Promise<ConfirmResponse> {
-    return this.request('POST', '/auth/confirm', { totp });
+  confirm(req: ConfirmRequest): Promise<ConfirmResponse> {
+    return this.request('POST', '/auth/confirm', req);
   }
 
   getMe(): Promise<Me> {

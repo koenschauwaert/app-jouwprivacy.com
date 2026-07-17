@@ -3,17 +3,19 @@ import React, { useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
 import { api, isApiClientError } from '@/api';
+import { useAuth } from '@/auth/AuthContext';
 import { Button, GlassCard, LanguageToggle, Screen, Text, TextField } from '@/components';
 import { useI18n } from '@/i18n/I18nProvider';
 import { spacing } from '@/theme';
 
 interface LoginScreenProps {
-  /** Called with the MFA token once the credentials are accepted. */
-  onAuthenticated: (mfaToken: string) => void;
+  /** Called with the MFA token when the account has 2FA and a second step is needed. */
+  onTwoFactorRequired: (mfaToken: string) => void;
 }
 
-export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
+export function LoginScreen({ onTwoFactorRequired }: LoginScreenProps) {
   const { t } = useI18n();
+  const { completeLogin } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | undefined>();
@@ -25,8 +27,15 @@ export function LoginScreen({ onAuthenticated }: LoginScreenProps) {
     setLoading(true);
     setError(undefined);
     try {
-      const { mfaToken } = await api.login({ email: email.trim(), password });
-      onAuthenticated(mfaToken);
+      const response = await api.login({ email: email.trim(), password });
+      if (response.mfaRequired) {
+        // Account has 2FA: hand off to the second step to exchange the mfaToken.
+        onTwoFactorRequired(response.mfaToken);
+      } else {
+        // No 2FA: the server already issued a session; complete login directly
+        // (same path the 2FA step uses after verifyTwoFactor) and skip the screen.
+        await completeLogin(response.session);
+      }
     } catch (e) {
       setError(
         isApiClientError(e) && e.code === 'INVALID_CREDENTIALS'

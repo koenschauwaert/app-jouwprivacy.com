@@ -54,7 +54,7 @@ export function AuthNavigator() {
     <View style={styles.root}>
       <Animated.View style={[styles.track, { width: width * 2 }, trackStyle]}>
         <View style={{ width }}>
-          <LoginScreen onAuthenticated={goToTwoFactor} />
+          <LoginScreen onTwoFactorRequired={goToTwoFactor} />
         </View>
         <View style={{ width }}>{mfaToken != null && <TwoFactorScreen mfaToken={mfaToken} />}</View>
       </Animated.View>
