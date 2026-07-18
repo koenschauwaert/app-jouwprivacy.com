@@ -16,6 +16,24 @@ Play**, and **F-Droid / Neo Store**.
 
 ---
 
+## Install on Android with Obtainium
+
+[Obtainium](https://github.com/ImranR98/Obtainium) installs and auto-updates
+Android apps straight from their source — for JouwPrivacy, this repo's **GitHub
+Releases**. No Google account, no Play Services, no tracking.
+
+1. Install Obtainium (from its
+   [GitHub Releases](https://github.com/ImranR98/Obtainium/releases) or F-Droid).
+2. In Obtainium: **Add App** → paste
+   `https://github.com/koenschauwaert/app-jouwprivacy.com` → **Add**.
+3. Obtainium finds the latest Release, installs the signed
+   `jouwprivacy-<version>.apk`, and offers the update whenever a new Release is
+   published.
+
+Every release is built and signed in CI and ships the APK plus its **SHA-256**,
+so you can verify the download — see [`VERIFYING.md`](VERIFYING.md). How releases
+are cut and signed is documented in [`RELEASING.md`](RELEASING.md).
+
 ## Privacy
 
 - **One backend for all data.** Every API call goes exclusively to the
@@ -109,6 +127,10 @@ modules/
 
 ## Distribution
 
+- **Android APK via Obtainium (this repo).** Every version tag is built and
+  signed in CI and published to this repo's GitHub Releases; install and
+  auto-update it with [Obtainium](#install-on-android-with-obtainium). See
+  [`RELEASING.md`](RELEASING.md).
 - **Apple App Store / Google Play.** Built and signed by Overnight Technology.
   Signing material and store credentials are supplied at build time and are
   **not** part of this repository.

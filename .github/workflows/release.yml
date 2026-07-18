@@ -1,0 +1,143 @@
+name: Release APK
+
+# Build a release-signed Android APK and publish it as a GitHub Release, so the
+# app can be installed and auto-updated via Obtainium (which reads this repo's
+# Releases). See RELEASING.md for the one-time keystore setup and how to cut a
+# release.
+#
+# Trigger: push a version tag that matches app.json's expo.version, e.g.
+#   git tag v1.0.3 && git push origin v1.0.3
+# or run it manually from the Actions tab against an existing tag.
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing version tag to (re)build, e.g. v1.0.3"
+        required: true
+
+# Least privilege: only allow creating the Release and uploading its assets.
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build signed APK · publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve & verify version
+        id: ver
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag }}"
+          else
+            TAG="${GITHUB_REF_NAME}"
+          fi
+          VERSION="${TAG#v}"
+          APP_VERSION="$(node -p "require('./app.json').expo.version")"
+          if [ "$VERSION" != "$APP_VERSION" ]; then
+            echo "::error::Tag '$TAG' (version '$VERSION') does not match app.json expo.version '$APP_VERSION'. Bump app.json (version + android.versionCode), commit, then re-tag."
+            exit 1
+          fi
+          echo "tag=$TAG"                       >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"               >> "$GITHUB_OUTPUT"
+          echo "apk=jouwprivacy-$VERSION.apk"   >> "$GITHUB_OUTPUT"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prebuild native Android project
+        run: npx expo prebuild --clean --platform android --no-install
+
+      - name: Decode release keystore
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 is not set. See RELEASING.md → one-time keystore setup."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+
+      - name: Build signed release APK
+        working-directory: android
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew :app:assembleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/release.keystore" \
+            -Pandroid.injected.signing.store.password="$STORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+
+      - name: Collect & checksum APK
+        id: apk
+        run: |
+          set -euo pipefail
+          SRC="$(ls android/app/build/outputs/apk/release/*.apk | head -1)"
+          echo "Built: $SRC"
+          case "$SRC" in
+            *-unsigned.apk)
+              echo "::error::Gradle produced an UNSIGNED APK ($SRC) — release signing did not apply. Check the ANDROID_* secrets."
+              exit 1 ;;
+          esac
+          OUT="${{ steps.ver.outputs.apk }}"
+          cp "$SRC" "$OUT"
+          sha256sum "$OUT" | tee "$OUT.sha256"
+
+      - name: Verify signature is the release key (not the debug key)
+        run: |
+          set -euo pipefail
+          APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
+          echo "Using $APKSIGNER"
+          "$APKSIGNER" verify --print-certs "${{ steps.ver.outputs.apk }}" | tee certs.txt
+          if grep -qi "CN=Android Debug" certs.txt; then
+            echo "::error::APK is signed with the Android debug key — release signing did not apply. Aborting."
+            exit 1
+          fi
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.ver.outputs.tag }}
+          VERSION: ${{ steps.ver.outputs.version }}
+          APK: ${{ steps.ver.outputs.apk }}
+        run: |
+          set -euo pipefail
+          NOTES="Signed Android APK for JouwPrivacy $VERSION. Install and auto-update it with Obtainium by adding this repo as a source — see the README. Verify the download with the attached ${APK}.sha256 (see VERIFYING.md)."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
+          else
+            gh release create "$TAG" "$APK" "$APK.sha256" \
+              --title "JouwPrivacy $VERSION" \
+              --notes "$NOTES" \
+              --verify-tag
+          fi
