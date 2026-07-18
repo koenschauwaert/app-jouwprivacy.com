@@ -53,6 +53,36 @@ expected and is not part of "is the code the same".
 > (below) are in place. Until then, this lets you build from source, run the
 > result, and diff the non-signature contents.
 
+## Verify the signing certificate (authenticity)
+
+The SHA-256 above proves the bytes you downloaded match what we published. The
+**signing certificate** proves *we* built it — and it is the mechanism Obtainium
+and Android use to guarantee every future update comes from us and nobody else.
+
+- **Package ID:** `com.jouwprivacy.app`
+- **SHA-256 of the signing certificate:** shown in every GitHub Release's notes,
+  and pinned in [`signing-cert-sha256.txt`](signing-cert-sha256.txt).
+
+This fingerprint is **the same for every version** - it comes from our private
+signing key, which never changes. Android refuses any update signed by a
+different key, so nobody can push a malicious "update" over the real app. Our CI
+re-derives it on every release and refuses to publish if it ever drifts.
+
+Check it yourself against any downloaded APK:
+
+```bash
+apksigner verify --print-certs jouwprivacy-<version>.apk   # from the Android SDK build-tools
+# or, without the Android SDK:
+keytool -printcert -jarfile jouwprivacy-<version>.apk
+```
+
+Find the `SHA-256 digest` line and compare it to the value above.
+
+> The Google Play and Apple App Store builds are signed with **different** keys
+> (Play may re-sign via Play App Signing). That is expected - each distribution
+> channel updates only within itself. The fingerprint here is specifically the
+> GitHub / Obtainium APK's.
+
 ## Reproducible builds - status: PLANNED (not yet achieved)
 
 Independently reproducing a **byte-for-byte identical** release is the strongest

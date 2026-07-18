@@ -131,16 +131,67 @@ jobs:
           cp "$SRC" "$OUT"
           sha256sum "$OUT" | tee "$OUT.sha256"
 
-      - name: Verify signature is the release key (not the debug key)
+      - name: Verify signature & pin the signing certificate
+        id: sign
         run: |
           set -euo pipefail
           APKSIGNER="$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)"
           echo "Using $APKSIGNER"
           "$APKSIGNER" verify --print-certs "${{ steps.ver.outputs.apk }}" | tee certs.txt
+
+          # Never publish a debug-signed APK.
           if grep -qi "CN=Android Debug" certs.txt; then
             echo "::error::APK is signed with the Android debug key — release signing did not apply. Aborting."
             exit 1
           fi
+
+          # The signing certificate fingerprint is the app's permanent identity:
+          # ONE value for every version. Obtainium/Android pin it, and only accept
+          # updates signed by the same key — so a change here would break updates
+          # for all existing users. Extract it and format it Obtainium-style.
+          RAW="$(grep -m1 -i 'SHA-256 digest' certs.txt | awk '{print $NF}')"
+          if [ -z "$RAW" ]; then
+            echo "::error::Could not read the signing certificate SHA-256 from apksigner output."
+            exit 1
+          fi
+          FP="$(printf '%s' "$RAW" | tr 'a-f' 'A-F' | sed 's/../&:/g; s/:$//')"
+          PKG="$(node -p "require('./app.json').expo.android.package")"
+          echo "Package ID:           $PKG"
+          echo "Signing cert SHA-256: $FP"
+
+          # Drift guard: once signing-cert-sha256.txt contains the fingerprint, the
+          # built APK MUST match it — otherwise a silent key change would break
+          # updates for every existing user. Until it is filled in, only report it.
+          norm() { tr 'a-f' 'A-F' | tr -d ' \t\r\n:'; }
+          PIN_FILE="signing-cert-sha256.txt"
+          EXPECTED=""
+          if [ -f "$PIN_FILE" ]; then
+            EXPECTED="$(grep -oiE '([0-9a-f]{2}:){31}[0-9a-f]{2}|[0-9a-f]{64}' "$PIN_FILE" | head -1 | norm || true)"
+          fi
+          ACTUAL="$(printf '%s' "$RAW" | norm)"
+          if [ -n "$EXPECTED" ]; then
+            if [ "$EXPECTED" != "$ACTUAL" ]; then
+              echo "::error::Signing certificate changed vs $PIN_FILE. If intentional, existing Obtainium users can NOT update (they must reinstall). Aborting."
+              exit 1
+            fi
+            echo "Signing certificate matches the pinned fingerprint in $PIN_FILE."
+          else
+            echo "::notice::$PIN_FILE has no pinned fingerprint yet. Commit this line to lock the key and enable drift detection: $FP"
+          fi
+
+          {
+            echo "package_id=$PKG"
+            echo "cert_sha256=$FP"
+          } >> "$GITHUB_OUTPUT"
+
+          {
+            echo "### Android signing identity"
+            echo ""
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Package ID | \`$PKG\` |"
+            echo "| Signing cert SHA-256 | \`$FP\` |"
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish GitHub Release
         env:
@@ -148,11 +199,24 @@ jobs:
           TAG: ${{ steps.ver.outputs.tag }}
           VERSION: ${{ steps.ver.outputs.version }}
           APK: ${{ steps.ver.outputs.apk }}
+          PACKAGE_ID: ${{ steps.sign.outputs.package_id }}
+          CERT_SHA256: ${{ steps.sign.outputs.cert_sha256 }}
         run: |
           set -euo pipefail
-          NOTES="Signed Android APK for JouwPrivacy $VERSION. Install and auto-update it with Obtainium by adding this repo as a source — see the README. Verify the download with the attached ${APK}.sha256 (see VERIFYING.md)."
+          NOTES="$(cat <<EOF
+Signed Android APK for JouwPrivacy $VERSION. Install and auto-update it with Obtainium by adding this repo as a source — see the README.
+
+**Verify this build**
+- Package ID: \`$PACKAGE_ID\`
+- SHA-256 of signing certificate: \`$CERT_SHA256\`
+- APK checksum: see the attached \`$APK.sha256\`
+
+The signing certificate above is the app's permanent identity — it is identical for every version, and Obtainium/Android only install updates signed by it. Confirm it yourself with \`apksigner verify --print-certs $APK\`. See VERIFYING.md.
+EOF
+)"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
+            gh release edit "$TAG" --notes "$NOTES"
           else
             gh release create "$TAG" "$APK" "$APK.sha256" \
               --title "JouwPrivacy $VERSION" \

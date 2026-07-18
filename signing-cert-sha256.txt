@@ -1,0 +1,20 @@
+# JouwPrivacy — Android signing certificate SHA-256 fingerprint
+#
+# This is the app's PERMANENT identity: the SAME value for every version. It
+# comes from the release signing key (jouwprivacy-release.keystore), not from any
+# single build. Obtainium and Android pin it, so an update signed by a different
+# key can never install over the real app.
+#
+# The release workflow (.github/workflows/release.yml) reports the built APK's
+# fingerprint on every release, and — once a real fingerprint line is present
+# below — REFUSES to publish if the built APK ever stops matching it.
+#
+# To lock it, put the colon-separated fingerprint on its own line below. Get it
+# from a release's notes, or locally from the keystore:
+#   keytool -list -v -keystore jouwprivacy-release.keystore -alias jouwprivacy \
+#     | grep -i 'SHA256:'
+#
+# Example (this is Obtainium's, NOT ours):
+#   B3:53:60:1F:6A:1D:5F:D6:...:73:62
+
+fingerprint: EC:2D:DE:59:06:53:53:4B:15:02:FD:1C:A7:BC:63:07:94:63:8F:9E:B7:58:E6:A5:A6:22:BC:DE:B4:5D:AB:5F
