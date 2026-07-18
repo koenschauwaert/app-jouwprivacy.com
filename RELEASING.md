@@ -72,21 +72,36 @@ mis-set secret can never publish a wrongly-signed release.
 
 ## Cutting a release
 
-1. **Bump the version** in `app.json`:
-   - `expo.version` — the human version, e.g. `1.0.3` (this must match the tag).
-   - `expo.android.versionCode` — **strictly increasing integer**. Obtainium and
-     Android use this to detect an update; a release with an equal/lower
-     `versionCode` will not be offered as an update.
-   - `expo.ios.buildNumber` — keep it in step with `versionCode` for parity.
-2. **Commit** the bump.
-3. **Tag and push** — the tag must equal `v<expo.version>`:
+The marketing version (`expo.version` in `app.json`) is the **single shared
+anchor** across iOS, Google Play, and this GitHub / Obtainium channel. The
+stores' `versionCode` / `buildNumber` are owned by EAS (remote auto-increment);
+this channel's APK `versionCode` is **derived from `expo.version`** in CI, so it
+stays monotonic and in sync automatically — you never bump it by hand.
+
+### Recommended: `./build.sh github`
+
+From the repo root, `./build.sh github` reuses the **same version-bump prompt as
+the store builds**, then tags `v<expo.version>` to fire this workflow. Because it
+shares that prompt, iOS, Play, and Obtainium all ship the same version and tag.
+It only pushes the tag once the commit is already on the (secret-scanned) public
+remote, so it never drags an unscanned commit to the public repo.
+
+### Manual equivalent
+
+1. Set `expo.version` in `app.json` to the release version (e.g. `1.0.3`) and
+   commit it. **Do not** touch `versionCode` / `buildNumber` — EAS owns the store
+   ones, and CI derives the APK one from the version.
+2. Push the commit through the secret scan: `./git-sync.sh push`.
+3. Tag it — the tag must equal `v<expo.version>` — and push the tag:
    ```bash
-   git tag v1.0.3
-   git push origin v1.0.3
+   git -C app tag v1.0.3
+   git -C app push origin v1.0.3
    ```
-4. CI builds the signed APK, verifies the signature, and publishes a Release
-   named `JouwPrivacy 1.0.3` with `jouwprivacy-1.0.3.apk` + `.sha256` attached.
-5. Obtainium users are offered the update automatically.
+
+Either way, CI builds the signed APK, verifies the signature, derives the
+`versionCode`, and publishes a Release named `JouwPrivacy 1.0.3` with
+`jouwprivacy-1.0.3.apk` + `.sha256` attached; Obtainium offers it as an update
+automatically.
 
 To rebuild/re-publish an existing tag (e.g. after fixing the workflow), run the
 **Release APK** workflow manually from the Actions tab and pass the tag; it will
