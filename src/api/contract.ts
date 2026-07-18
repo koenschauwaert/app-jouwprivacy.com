@@ -42,8 +42,7 @@ export interface Session {
  * WITHOUT 2FA is handed a `session` directly and skips the second screen.
  */
 export type LoginResponse =
-  | { mfaRequired: true; mfaToken: string }
-  | { mfaRequired: false; session: Session };
+  { mfaRequired: true; mfaToken: string } | { mfaRequired: false; session: Session };
 
 export interface TwoFactorRequest {
   mfaToken: string;

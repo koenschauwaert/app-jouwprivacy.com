@@ -171,8 +171,7 @@ export const nl = {
     twoFactorEnabledLabel: 'Tweestapsverificatie is ingeschakeld voor je account.',
     disableTwoFactor: '2FA uitschakelen',
     disableTwoFactorTitle: 'Tweestapsverificatie uitschakelen',
-    disableTwoFactorHint:
-      'Voer je verificatiecode in om tweestapsverificatie uit te schakelen.',
+    disableTwoFactorHint: 'Voer je verificatiecode in om tweestapsverificatie uit te schakelen.',
     twoFactorDisabled: 'Tweestapsverificatie is uitgeschakeld.',
     saved: 'Wijziging opgeslagen.',
   },

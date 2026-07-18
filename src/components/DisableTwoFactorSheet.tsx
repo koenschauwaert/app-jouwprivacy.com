@@ -23,7 +23,11 @@ interface DisableTwoFactorSheetProps {
  * /auth/2fa/disable, mirroring the confirm gate's flow (auto-submit on the 6th
  * digit, green flash, then hand control back).
  */
-export function DisableTwoFactorSheet({ visible, onClose, onDisabled }: DisableTwoFactorSheetProps) {
+export function DisableTwoFactorSheet({
+  visible,
+  onClose,
+  onDisabled,
+}: DisableTwoFactorSheetProps) {
   const { t } = useI18n();
   const [totp, setTotp] = useState('');
   const [error, setError] = useState<string | undefined>();

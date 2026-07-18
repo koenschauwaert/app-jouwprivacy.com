@@ -80,9 +80,10 @@ describe('HttpApiClient 2FA methods', () => {
       .mockResolvedValueOnce(jsonResponse(200, { mfaRequired: false, session }));
     global.fetch = fetchMock as unknown as typeof fetch;
 
-    await expect(
-      client().login({ email: 'a@b.c', password: 'pw' }),
-    ).resolves.toEqual({ mfaRequired: false, session });
+    await expect(client().login({ email: 'a@b.c', password: 'pw' })).resolves.toEqual({
+      mfaRequired: false,
+      session,
+    });
   });
 
   it('login passes through the 2FA-required union', async () => {
@@ -91,8 +92,9 @@ describe('HttpApiClient 2FA methods', () => {
       .mockResolvedValueOnce(jsonResponse(200, { mfaRequired: true, mfaToken: 'mfa_1' }));
     global.fetch = fetchMock as unknown as typeof fetch;
 
-    await expect(
-      client().login({ email: 'a@b.c', password: 'pw' }),
-    ).resolves.toEqual({ mfaRequired: true, mfaToken: 'mfa_1' });
+    await expect(client().login({ email: 'a@b.c', password: 'pw' })).resolves.toEqual({
+      mfaRequired: true,
+      mfaToken: 'mfa_1',
+    });
   });
 });

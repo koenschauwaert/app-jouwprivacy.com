@@ -117,9 +117,7 @@ describe('TwoFactorConfirmSheet (confirm gate)', () => {
         fireEvent.press(screen.getByText('Verify'));
       });
 
-      await waitFor(() =>
-        expect(screen.getByText('That password is incorrect.')).toBeTruthy(),
-      );
+      await waitFor(() => expect(screen.getByText('That password is incorrect.')).toBeTruthy());
       expect(onConfirmed).not.toHaveBeenCalled();
     });
   });
