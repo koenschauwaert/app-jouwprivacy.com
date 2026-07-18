@@ -57,7 +57,7 @@ describe('TwoFactorConfirmSheet (confirm gate)', () => {
       await waitFor(() => expect(onConfirmed).toHaveBeenCalledTimes(1), { timeout: 3000 });
       expect(spy).toHaveBeenCalledWith({ action: 'account_patch', totp: TOTP });
       expect(onConfirmed).toHaveBeenCalledWith('ct_test');
-    });
+    }, 15000); // real 1s success-flash delay + suite cold-start can exceed Jest's 5s default on CI
 
     it('rejects a wrong TOTP and never emits a token', async () => {
       jest.spyOn(api, 'confirm').mockRejectedValue(new ApiClientError('MFA_INVALID', 'invalid'));
@@ -105,7 +105,7 @@ describe('TwoFactorConfirmSheet (confirm gate)', () => {
       await waitFor(() => expect(onConfirmed).toHaveBeenCalledTimes(1), { timeout: 3000 });
       expect(spy).toHaveBeenCalledWith({ action: 'account_patch', password: PASSWORD });
       expect(onConfirmed).toHaveBeenCalledWith('ct_pw');
-    });
+    }, 15000); // real 1s success-flash delay can exceed Jest's 5s default on a slow CI runner
 
     it('rejects a wrong password and never emits a token', async () => {
       jest.spyOn(api, 'confirm').mockRejectedValue(new ApiClientError('MFA_INVALID', 'invalid'));
