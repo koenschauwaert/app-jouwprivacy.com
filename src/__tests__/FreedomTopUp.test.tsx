@@ -27,7 +27,7 @@ describe('FreedomTopUp', () => {
     renderTopUp();
 
     // Nothing is sent just by tapping the button - it opens the confirm sheet.
-    fireEvent.press(screen.getByText('Add 1 GB'));
+    fireEvent.press(screen.getByText('Restore full speed'));
     expect(openSms).not.toHaveBeenCalled();
 
     fireEvent.press(screen.getByText('Open text message'));
@@ -38,7 +38,7 @@ describe('FreedomTopUp', () => {
     const openSms = jest.spyOn(links, 'openSms').mockResolvedValue(true);
     renderTopUp();
 
-    fireEvent.press(screen.getByText('Add 1 GB'));
+    fireEvent.press(screen.getByText('Restore full speed'));
     fireEvent.press(screen.getByText('Cancel'));
     expect(openSms).not.toHaveBeenCalled();
   });

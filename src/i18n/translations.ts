@@ -96,17 +96,17 @@ export const nl = {
     renew: 'Verlengen',
     orderExtras: "Extra's bestellen",
     renewSoon: 'Verlengen komt eraan. Binnenkort kun je hier je abonnement verlengen.',
-    extrasSoon: "Extra's komen eraan. Bundels en top-ups worden later toegevoegd.",
+    extrasSoon: "Extra's komen eraan. Binnenkort vind je ze hier in de app.",
     topUp: {
-      button: '1 GB toevoegen',
-      helpA11y: 'Uitleg over databundel bijkopen',
-      confirmTitle: '1 GB extra data',
+      button: 'Volle snelheid herstellen',
+      helpA11y: 'Uitleg over volle snelheid herstellen',
+      confirmTitle: 'Volle snelheid voor vandaag',
       confirmBody:
-        'Je verstuurt een sms met de tekst "{keyword}" naar {number}. Je telefoon opent de berichten-app, zodat je de sms zelf bevestigt en verstuurt. Hiermee voeg je 1 GB voor vandaag toe, maximaal 3× per dag.',
+        'Je verstuurt een sms met de tekst "{keyword}" naar {number}. Je telefoon opent de berichten-app, zodat je de sms zelf bevestigt en verstuurt. Hiermee herstel je je volle snelheid voor de rest van vandaag. Dit is gratis en kan maximaal 3× per dag.',
       confirmCta: 'Sms openen',
-      helpTitle: 'Hoe werkt bijkopen?',
+      helpTitle: 'Hoe werkt volle snelheid herstellen?',
       helpBody:
-        'Met Freedom kun je je databundel opwaarderen met 1 GB per dag, maximaal 3× per dag. Je verstuurt zelf een sms met "{keyword}" naar {number}; wij voegen de bundel toe. De knop opent alleen je berichten-app en er wordt niets automatisch verstuurd.',
+        'Bij Freedom zakt de snelheid na 3 GB op één dag naar 512 kbps. Je kunt je volle snelheid dan herstellen: gratis, maximaal 3× per dag, telkens voor de rest van die dag. Je verstuurt zelf een sms met "{keyword}" naar {number}. De knop opent alleen je berichten-app en er wordt niets automatisch verstuurd.',
     },
     order: {
       title: 'Je bestelling',
@@ -319,17 +319,17 @@ export const en: Translations = {
     renew: 'Renew',
     orderExtras: 'Order extras',
     renewSoon: 'Renewal is coming soon. You will be able to renew your plan here.',
-    extrasSoon: 'Extras are coming soon. Bundles and top-ups will be added later.',
+    extrasSoon: 'Extras are coming soon. You will find them here in the app.',
     topUp: {
-      button: 'Add 1 GB',
-      helpA11y: 'About buying extra data',
-      confirmTitle: '1 GB extra data',
+      button: 'Restore full speed',
+      helpA11y: 'About restoring full speed',
+      confirmTitle: 'Full speed for today',
       confirmBody:
-        'You will send a text with the word "{keyword}" to {number}. Your phone opens its messaging app so you confirm and send the text yourself. This adds 1 GB for today, up to 3× per day.',
+        'You will send a text with the word "{keyword}" to {number}. Your phone opens its messaging app so you confirm and send the text yourself. This restores your full speed for the rest of today. It is free and can be done up to 3× per day.',
       confirmCta: 'Open text message',
-      helpTitle: 'How does buying extra work?',
+      helpTitle: 'How does restoring full speed work?',
       helpBody:
-        'With Freedom you can top up your data by 1 GB per day, up to 3× per day. You send a text with "{keyword}" to {number} yourself; we add the bundle. The button only opens your messaging app - nothing is sent automatically.',
+        'With Freedom, after 3 GB in one day your speed drops to 512 kbps. You can then restore your full speed: free, up to 3× per day, each time for the rest of that day. You send a text with "{keyword}" to {number} yourself. The button only opens your messaging app and nothing is sent automatically.',
     },
     order: {
       title: 'Your order',
