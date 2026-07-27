@@ -146,7 +146,16 @@ export interface InvoiceLink {
 export interface Referral {
   code: string;
   shareUrl: string;
+  /** Total unpaid credit, including anything still in its cooldown. */
   earnedCents: number;
+  /** Payable right now (AV artikel 22 lid 7: 7 days after the referred order is paid). */
+  availableCents?: number;
+  /** Still inside the cooldown, shown as "in behandeling". */
+  pendingCents?: number;
+  /** Minimum available credit before a payout may be requested. */
+  payoutThresholdCents?: number;
+  /** Server's verdict on whether a payout may be requested right now. */
+  payoutAllowed?: boolean;
   currency: string;
   payoutPending: boolean;
 }

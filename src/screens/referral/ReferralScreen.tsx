@@ -95,7 +95,16 @@ function ReferralContent({
 
   const ibanValid = isValidIban(iban);
   const ibanError = iban.trim().length > 0 && !ibanValid ? t('referral.ibanInvalid') : undefined;
-  const canRequest = ibanValid && accountHolder.trim().length > 0;
+
+  // Fall back to the total when an older server omits the split, so the screen
+  // keeps working against either version.
+  const availableCents = referral.availableCents ?? referral.earnedCents;
+  const pendingCents = referral.pendingCents ?? 0;
+  // The server is the authority on the threshold; treat an omitted flag as
+  // allowed so an older server behaves as before.
+  const payoutAllowed = referral.payoutAllowed !== false;
+
+  const canRequest = payoutAllowed && ibanValid && accountHolder.trim().length > 0;
 
   return (
     <View style={styles.wrap}>
@@ -103,9 +112,20 @@ function ReferralContent({
         <Text variant="caption" tone="faint">
           {t('referral.earned')}
         </Text>
+        {/* Show what is actually payable. Credit becomes payable 7 days after
+            the referred order is paid, so a bare total would promise money the
+            payout button cannot yet release. */}
         <Text variant="title">
-          {formatMoney(referral.earnedCents, referral.currency, language)}
+          {formatMoney(availableCents, referral.currency, language)}
         </Text>
+        {pendingCents > 0 ? (
+          <Text variant="caption" tone="muted">
+            {t('referral.pending').replace(
+              '{amount}',
+              formatMoney(pendingCents, referral.currency, language),
+            )}
+          </Text>
+        ) : null}
       </GlassCard>
 
       <GlassCard>
@@ -120,6 +140,19 @@ function ReferralContent({
         <GlassCard>
           <Text tone="success">
             {submitted ? t('referral.payoutDone') : t('referral.payoutPending')}
+          </Text>
+        </GlassCard>
+      ) : !payoutAllowed ? (
+        <GlassCard>
+          <Text variant="caption" tone="muted">
+            {t('referral.payoutThreshold').replace(
+              '{threshold}',
+              formatMoney(
+                referral.payoutThresholdCents ?? 2500,
+                referral.currency,
+                language,
+              ),
+            )}
           </Text>
         </GlassCard>
       ) : !showPayout ? (
