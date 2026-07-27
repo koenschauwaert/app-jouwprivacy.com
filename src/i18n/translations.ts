@@ -149,6 +149,8 @@ export const nl = {
     submit: 'Verzoek indienen',
     payoutDone: 'Je verzoek is ingediend. We verwerken het handmatig.',
     payoutNote: 'Een uitbetaling is altijd een verzoek; we verwerken het handmatig.',
+    pending: '{amount} in behandeling',
+    payoutThreshold: 'Uitbetalen kan vanaf {threshold} beschikbaar tegoed.',
   },
   account: {
     title: 'Account',
@@ -372,6 +374,8 @@ export const en: Translations = {
     submit: 'Submit request',
     payoutDone: 'Your request has been submitted. We process it manually.',
     payoutNote: 'A payout is always a request; we process it manually.',
+    pending: '{amount} pending',
+    payoutThreshold: 'Payouts are possible from {threshold} of available credit.',
   },
   account: {
     title: 'Account',
