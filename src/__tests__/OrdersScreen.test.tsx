@@ -30,8 +30,11 @@ const ORDERS: Order[] = [
     orderedAt: '2025-09-01T10:12:00Z',
     status: 'delivered',
     invoiceId: 'inv_1',
-    deletionDate: '2032-12-31',
-    retentionCategory: 'invoice_fiscal_7y',
+    // A real hardware headline: warranty end + 3 months. This fixture used to say
+    // 2032-12-31 / invoice_fiscal_7y, which was the server's old (wrong) answer and a
+    // category string it never actually emitted.
+    deletionDate: '2028-04-14',
+    retentionCategory: 'hardware_order',
     ...NO_SHIPMENT,
   },
   {
