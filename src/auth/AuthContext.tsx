@@ -297,17 +297,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => setSessionExpiredHandler(null);
   }, [expireSession]);
 
-  // Persist an access token that the client refreshed transparently, so a cold
-  // start reads the fresh token from secure storage.
+  // Persist the tokens the client refreshed transparently, so a cold start
+  // reads the fresh pair from secure storage. BOTH matter: the server rotates
+  // the refresh token on every refresh and retires the presented one, so a
+  // cold start with the old refresh token would be read as reuse and revoke
+  // the whole family, signing the user out.
   useEffect(() => {
-    setTokensRefreshedHandler((accessToken) => {
+    setTokensRefreshedHandler(({ accessToken, refreshToken }) => {
       const generation = wipeGeneration.current;
       void (async () => {
         const stored = await getStoredSession();
         // A wipe that landed while we were reading storage must win: never
         // resurrect a session that was cleared out from under us.
         if (wipeGeneration.current !== generation) return;
-        if (stored) await storeSession({ ...stored, accessToken });
+        if (stored) await storeSession({ ...stored, accessToken, refreshToken });
       })();
     });
     return () => setTokensRefreshedHandler(null);
