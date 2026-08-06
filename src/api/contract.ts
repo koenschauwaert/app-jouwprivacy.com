@@ -49,8 +49,15 @@ export interface TwoFactorRequest {
   totp: string;
 }
 
+/**
+ * Result of /auth/refresh. The server ROTATES on every call: `refreshToken` is
+ * a NEW token and the one that was presented is retired. Presenting a retired
+ * token past the server's short grace window is treated as theft and revokes
+ * the whole family, so the client MUST persist this one and use it next time.
+ */
 export interface RefreshResponse {
   accessToken: string;
+  refreshToken: string;
   expiresIn: number;
 }
 

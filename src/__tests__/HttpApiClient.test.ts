@@ -25,8 +25,8 @@ describe('HttpApiClient token refresh-and-retry', () => {
   it('refreshes once and retries the original request transparently', async () => {
     let access = 'old-token';
     const onSessionExpired = jest.fn();
-    const onRefreshed = jest.fn((t: string) => {
-      access = t;
+    const onRefreshed = jest.fn((tokens: { accessToken: string; refreshToken: string }) => {
+      access = tokens.accessToken;
     });
     const client = new HttpApiClient(
       () => access,
@@ -38,14 +38,24 @@ describe('HttpApiClient token refresh-and-retry', () => {
     const fetchMock = jest
       .fn()
       .mockResolvedValueOnce(jsonResponse(401, EXPIRED)) // GET /me -> expired
-      .mockResolvedValueOnce(jsonResponse(200, { accessToken: 'new-token', expiresIn: 3600 })) // refresh
+      .mockResolvedValueOnce(
+        // The server rotates: a refresh always returns a new refresh token too.
+        jsonResponse(200, {
+          accessToken: 'new-token',
+          refreshToken: 'new-refresh-token',
+          expiresIn: 3600,
+        }),
+      )
       .mockResolvedValueOnce(jsonResponse(200, { id: 'u1', email: 'a@b.c' })); // retry GET /me
     global.fetch = fetchMock as unknown as typeof fetch;
 
     const me = await client.getMe();
 
     expect(me).toEqual({ id: 'u1', email: 'a@b.c' });
-    expect(onRefreshed).toHaveBeenCalledWith('new-token');
+    expect(onRefreshed).toHaveBeenCalledWith({
+      accessToken: 'new-token',
+      refreshToken: 'new-refresh-token',
+    });
     expect(onSessionExpired).not.toHaveBeenCalled();
 
     // Retry (3rd call) must carry the refreshed bearer token.

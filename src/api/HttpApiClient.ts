@@ -27,6 +27,13 @@ import { API_CONFIG } from './config';
 
 type TokenProvider = () => string | null;
 type SessionExpiredHandler = () => void;
+/**
+ * Both tokens from a rotation. The refresh token is included because the server
+ * retires the presented one on every refresh - keeping the old one signs the
+ * user out on the NEXT cycle, so the handler has to persist both.
+ */
+type RotatedTokens = { accessToken: string; refreshToken: string };
+type TokensRefreshedHandler = (tokens: RotatedTokens) => void;
 
 // Idempotent GETs are retried on transient failures; mutations never are.
 const MAX_GET_RETRIES = 2;
@@ -100,23 +107,27 @@ export class HttpApiClient implements ApiClient {
     private readonly getAccessToken: TokenProvider = () => null,
     private readonly onSessionExpired: SessionExpiredHandler = () => {},
     private readonly getRefreshToken: TokenProvider = () => null,
-    private readonly onAccessTokenRefreshed: (accessToken: string) => void = () => {},
+    private readonly onTokensRefreshed: TokensRefreshedHandler = () => {},
   ) {
     this.base = `${API_CONFIG.baseUrl}/${API_CONFIG.apiVersion}`;
   }
 
   /**
-   * Refresh the access token using the stored refresh token. Returns true on
-   * success (and pushes the new token via onAccessTokenRefreshed). Concurrent
-   * callers await the same in-flight refresh.
+   * Refresh the session using the stored refresh token. Returns true on success
+   * and pushes BOTH new tokens via onTokensRefreshed - the refresh token is
+   * rotated server-side, so dropping it here would sign the user out on the
+   * next cycle. Concurrent callers await the same in-flight refresh.
    */
   private async ensureRefreshed(): Promise<boolean> {
     if (!this.refreshing) {
       const refreshToken = this.getRefreshToken();
       if (!refreshToken) return false;
       this.refreshing = this.refresh(refreshToken)
-        .then(({ accessToken }) => {
-          this.onAccessTokenRefreshed(accessToken);
+        .then((rotated) => {
+          this.onTokensRefreshed({
+            accessToken: rotated.accessToken,
+            refreshToken: rotated.refreshToken,
+          });
           return true;
         })
         .catch(() => false)
@@ -226,7 +237,16 @@ export class HttpApiClient implements ApiClient {
   }
   async refresh(refreshToken: string): Promise<RefreshResponse> {
     const r = await this.request<RefreshResponse>('POST', '/auth/refresh', { refreshToken }, false);
-    if (!r || typeof r.accessToken !== 'string' || r.accessToken === '') {
+    // Both tokens are required. A response without the rotated refreshToken
+    // means the server retired the one we hold and gave us no successor, so
+    // continuing with the old one would just burn the family on the next call.
+    if (
+      !r ||
+      typeof r.accessToken !== 'string' ||
+      r.accessToken === '' ||
+      typeof r.refreshToken !== 'string' ||
+      r.refreshToken === ''
+    ) {
       throw new ApiClientError(
         'UPSTREAM_UNAVAILABLE',
         'Malformed refresh response from the server.',

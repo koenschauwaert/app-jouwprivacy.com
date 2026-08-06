@@ -5,7 +5,10 @@ import { HttpApiClient } from './HttpApiClient';
 let accessToken: string | null = null;
 let refreshToken: string | null = null;
 let sessionExpiredHandler: (() => void) | null = null;
-let tokensRefreshedHandler: ((accessToken: string) => void) | null = null;
+let tokensRefreshedHandler: ((tokens: RotatedTokens) => void) | null = null;
+
+/** Both tokens produced by a rotation; the server retires the presented one. */
+export type RotatedTokens = { accessToken: string; refreshToken: string };
 
 /** Set by the auth layer so the HTTP client can attach the bearer token. */
 export function setAccessToken(token: string | null): void {
@@ -26,10 +29,10 @@ export function setSessionExpiredHandler(fn: (() => void) | null): void {
 }
 
 /**
- * Registered by the auth layer to persist an access token that the client
- * refreshed transparently (so a cold start picks up the fresh token).
+ * Registered by the auth layer to persist the tokens the client refreshed
+ * transparently (so a cold start picks up the fresh pair).
  */
-export function setTokensRefreshedHandler(fn: ((accessToken: string) => void) | null): void {
+export function setTokensRefreshedHandler(fn: ((tokens: RotatedTokens) => void) | null): void {
   tokensRefreshedHandler = fn;
 }
 
@@ -38,9 +41,13 @@ function createClient(): ApiClient {
     () => accessToken,
     () => sessionExpiredHandler?.(),
     () => refreshToken,
-    (newAccessToken) => {
-      accessToken = newAccessToken;
-      tokensRefreshedHandler?.(newAccessToken);
+    (rotated) => {
+      // In-memory first and synchronously: the next refresh reads these, and
+      // presenting the retired token would revoke the whole family. Persisting
+      // is the auth layer's job and is allowed to lag behind by a tick.
+      accessToken = rotated.accessToken;
+      refreshToken = rotated.refreshToken;
+      tokensRefreshedHandler?.(rotated);
     },
   );
 }
