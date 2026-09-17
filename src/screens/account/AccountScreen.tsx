@@ -10,6 +10,7 @@ import {
   AsyncBoundary,
   Button,
   DisableTwoFactorSheet,
+  EnableTwoFactorSheet,
   GlassCard,
   Screen,
   Text,
@@ -21,7 +22,10 @@ import { useI18n } from '@/i18n/I18nProvider';
 import type { RootStackParamList } from '@/navigation/types';
 import { spacing } from '@/theme';
 
-/** Account tab. View + edit own/delivery info. Any change requires 2FA. */
+/**
+ * Account tab. View + edit own/delivery info (any change is re-confirmed with
+ * 2FA, or the password when 2FA is off), and turn 2FA on or off.
+ */
 export function AccountScreen() {
   const { t } = useI18n();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -56,7 +60,8 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
   const [draft, setDraft] = useState<Account>(initial);
   const [show2fa, setShow2fa] = useState(false);
   const [showDisable2fa, setShowDisable2fa] = useState(false);
-  const [twoFactorDisabled, setTwoFactorDisabled] = useState(false);
+  const [showEnable2fa, setShowEnable2fa] = useState(false);
+  const [twoFactorNotice, setTwoFactorNotice] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -187,9 +192,9 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
         />
       )}
 
-      {/* Two-factor section: only meaningful for accounts that have 2FA on. No
-          2FA input is rendered anywhere on the screen when it is off. */}
-      {initial.twoFactorEnabled && (
+      {/* Two-factor section. 2FA is optional but strongly advised: when it is
+          off, the card says so and offers to turn it on (primary action). */}
+      {initial.twoFactorEnabled ? (
         <GlassCard variant="subtle">
           <Text variant="heading">{t('account.twoFactorTitle')}</Text>
           <Text variant="caption" tone="muted">
@@ -201,8 +206,16 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
             onPress={() => setShowDisable2fa(true)}
           />
         </GlassCard>
+      ) : (
+        <GlassCard>
+          <Text variant="heading">{t('account.twoFactorTitle')}</Text>
+          <Text variant="caption" tone="danger">
+            {t('account.twoFactorOffLabel')}
+          </Text>
+          <Button label={t('account.enableTwoFactor')} onPress={() => setShowEnable2fa(true)} />
+        </GlassCard>
       )}
-      {twoFactorDisabled && <Text tone="success">{t('account.twoFactorDisabled')}</Text>}
+      {twoFactorNotice && <Text tone="success">{twoFactorNotice}</Text>}
 
       <TwoFactorConfirmSheet
         visible={show2fa}
@@ -216,7 +229,16 @@ function AccountForm({ initial, onSaved }: { initial: Account; onSaved: () => vo
         onClose={() => setShowDisable2fa(false)}
         onDisabled={() => {
           setShowDisable2fa(false);
-          setTwoFactorDisabled(true);
+          setTwoFactorNotice(t('account.twoFactorDisabled'));
+          onSaved();
+        }}
+      />
+      <EnableTwoFactorSheet
+        visible={showEnable2fa}
+        onClose={() => setShowEnable2fa(false)}
+        onEnabled={() => {
+          setShowEnable2fa(false);
+          setTwoFactorNotice(t('account.twoFactorEnabledNow'));
           onSaved();
         }}
       />

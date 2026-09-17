@@ -61,6 +61,17 @@ export interface RefreshResponse {
   expiresIn: number;
 }
 
+/** Enable-later step 1: the pending TOTP secret (2FA is not on until step 2). */
+export interface TwoFactorEnrolment {
+  secret: string; // base32, for manual entry
+  otpauthUrl: string; // otpauth://totp/… for "open in authenticator app"
+}
+
+/** Enable-later step 2: 2FA is on; recovery codes are returned exactly once. */
+export interface TwoFactorEnabled {
+  recoveryCodes: string[];
+}
+
 export interface ConfirmResponse {
   confirmationToken: string;
 }
@@ -257,6 +268,10 @@ export interface ApiClient {
   verifyTwoFactor(req: TwoFactorRequest): Promise<Session>;
   /** Disable 2FA on the current account. `totp` accepts a TOTP or recovery code. */
   disableTwoFactor(req: { totp: string }): Promise<void>;
+  /** Start enabling 2FA; gated by the CURRENT password. 2FA stays off for now. */
+  beginTwoFactorEnable(req: { password: string }): Promise<TwoFactorEnrolment>;
+  /** Finish enabling 2FA with the first code from the authenticator. */
+  confirmTwoFactorEnable(req: { totp: string }): Promise<TwoFactorEnabled>;
   refresh(refreshToken: string): Promise<RefreshResponse>;
   logout(): Promise<void>;
   confirm(req: ConfirmRequest): Promise<ConfirmResponse>;

@@ -28,6 +28,26 @@ export async function openExternal(url: string): Promise<boolean> {
   return true;
 }
 
+// Only a TOTP otpauth URI with no whitespace: nothing else may reach the OS.
+const OTPAUTH_TOTP = /^otpauth:\/\/totp\/\S+$/;
+
+/**
+ * Hand an otpauth://totp/ URI to the installed authenticator app (the "add
+ * account" deep link; a QR is useless when the authenticator is on this same
+ * phone). The URI comes from the server, so it is validated first. Returns
+ * false when rejected or when no app handles the scheme, so the caller can
+ * point the user at the copyable key instead.
+ */
+export async function openAuthenticator(url: string): Promise<boolean> {
+  if (typeof url !== 'string' || !OTPAUTH_TOTP.test(url)) return false;
+  try {
+    await Linking.openURL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // A phone shortcode / MSISDN: optional leading +, then 1-15 digits. Nothing else,
 // so the value can't inject extra sms: parameters or additional recipients.
 const SMS_RECIPIENT = /^\+?[0-9]{1,15}$/;
