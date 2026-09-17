@@ -74,23 +74,24 @@ mis-set secret can never publish a wrongly-signed release.
 
 The marketing version (`expo.version` in `app.json`) is the **single shared
 anchor** across iOS, Google Play, and this GitHub / Obtainium channel. The
-stores' `versionCode` / `buildNumber` are owned by EAS (remote auto-increment);
-this channel's APK `versionCode` is **derived from `expo.version`** in CI, so it
-stays monotonic and in sync automatically — you never bump it by hand.
+stores' build counter (`ios.buildNumber` = `android.versionCode` in `app.json`)
+goes up by one on every store release; this channel's APK `versionCode` is
+**derived from `expo.version`** in CI, so you never bump it by hand.
 
-### Recommended: `./build.sh github`
+### Recommended: `./build.sh release`
 
-From the repo root, `./build.sh github` reuses the **same version-bump prompt as
-the store builds**, then tags `v<expo.version>` to fire this workflow. Because it
-shares that prompt, iOS, Play, and Obtainium all ship the same version and tag.
-It only pushes the tag once the commit is already on the (secret-scanned) public
-remote, so it never drags an unscanned commit to the public repo.
+From the repo root, `./build.sh release` does the whole release in one go:
+version + build-number bump, Android AAB and iOS IPA (built locally), App Store
+Connect upload, then this tag. So iOS, Play, and Obtainium always ship the same
+version. `./build.sh github` tags a GitHub-only release. Both push the tag only
+once the commit is already on the (secret-scanned) public remote, so no
+unscanned commit ever reaches the public repo.
 
 ### Manual equivalent
 
 1. Set `expo.version` in `app.json` to the release version (e.g. `1.0.3`) and
-   commit it. **Do not** touch `versionCode` / `buildNumber` — EAS owns the store
-   ones, and CI derives the APK one from the version.
+   commit it. CI derives the APK `versionCode` from the version; the store
+   build counter only matters for store builds.
 2. Push the commit through the secret scan: `./git-sync.sh push`.
 3. Tag it — the tag must equal `v<expo.version>` — and push the tag:
    ```bash
