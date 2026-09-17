@@ -19,6 +19,8 @@ import {
   Session,
   Subscription,
   Ticket,
+  TwoFactorEnabled,
+  TwoFactorEnrolment,
   TwoFactorRequest,
   Usage,
 } from './contract';
@@ -90,6 +92,20 @@ function expectArray<T>(payload: unknown, key: string): T[] {
     throw new ApiClientError('UPSTREAM_UNAVAILABLE', MALFORMED);
   }
   return value as T[];
+}
+
+/** Validate the enable-2FA step-1 payload before it is shown to the user. */
+function requireEnrolment(payload: unknown): TwoFactorEnrolment {
+  const o = expectObject<Partial<TwoFactorEnrolment>>(payload);
+  if (
+    typeof o.secret !== 'string' ||
+    o.secret === '' ||
+    typeof o.otpauthUrl !== 'string' ||
+    o.otpauthUrl === ''
+  ) {
+    throw new ApiClientError('UPSTREAM_UNAVAILABLE', MALFORMED);
+  }
+  return { secret: o.secret, otpauthUrl: o.otpauthUrl };
 }
 
 /**
@@ -234,6 +250,18 @@ export class HttpApiClient implements ApiClient {
   }
   disableTwoFactor(req: { totp: string }): Promise<void> {
     return this.request('POST', '/auth/2fa/disable', req);
+  }
+  beginTwoFactorEnable(req: { password: string }): Promise<TwoFactorEnrolment> {
+    return this.request<unknown>('POST', '/auth/2fa/enable/begin', req).then(requireEnrolment);
+  }
+  confirmTwoFactorEnable(req: { totp: string }): Promise<TwoFactorEnabled> {
+    return this.request<unknown>('POST', '/auth/2fa/enable/confirm', req).then((r) => {
+      const recoveryCodes = expectArray<unknown>(r, 'recoveryCodes');
+      if (!recoveryCodes.every((c) => typeof c === 'string' && c !== '')) {
+        throw new ApiClientError('UPSTREAM_UNAVAILABLE', MALFORMED);
+      }
+      return { recoveryCodes: recoveryCodes as string[] };
+    });
   }
   async refresh(refreshToken: string): Promise<RefreshResponse> {
     const r = await this.request<RefreshResponse>('POST', '/auth/refresh', { refreshToken }, false);

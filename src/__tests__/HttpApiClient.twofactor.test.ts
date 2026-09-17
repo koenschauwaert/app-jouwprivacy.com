@@ -2,7 +2,8 @@
 /**
  * 2FA-related transport behaviour of the real client: `confirm` forwards the
  * full ConfirmRequest (including the required `action`), `disableTwoFactor` hits
- * /auth/2fa/disable and resolves on a 204, and `login` passes the discriminated
+ * /auth/2fa/disable and resolves on a 204, the enable-later pair validates its
+ * payloads, and `login` passes the discriminated
  * LoginResponse union straight through.
  */
 import { HttpApiClient } from '@/api/HttpApiClient';
@@ -95,6 +96,54 @@ describe('HttpApiClient 2FA methods', () => {
     await expect(client().login({ email: 'a@b.c', password: 'pw' })).resolves.toEqual({
       mfaRequired: true,
       mfaToken: 'mfa_1',
+    });
+  });
+
+  it('beginTwoFactorEnable posts the password and returns secret + otpauth URL', async () => {
+    const enrolment = {
+      secret: 'JBSWY3DPEHPK3PXP',
+      otpauthUrl: 'otpauth://totp/JP:a%40b.c?secret=JBSWY3DPEHPK3PXP',
+    };
+    const fetchMock = jest.fn().mockResolvedValueOnce(jsonResponse(200, enrolment));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(client().beginTwoFactorEnable({ password: 'pw' })).resolves.toEqual(enrolment);
+
+    const { url, init } = lastCall(fetchMock);
+    expect(url).toMatch(/\/auth\/2fa\/enable\/begin$/);
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body ?? '{}')).toEqual({ password: 'pw' });
+  });
+
+  it('beginTwoFactorEnable rejects a malformed enrolment payload', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce(jsonResponse(200, { secret: '' }));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(client().beginTwoFactorEnable({ password: 'pw' })).rejects.toMatchObject({
+      code: 'UPSTREAM_UNAVAILABLE',
+    });
+  });
+
+  it('confirmTwoFactorEnable posts the code and returns the recovery codes', async () => {
+    const recoveryCodes = ['AAAAA-BBBBB', 'CCCCC-DDDDD'];
+    const fetchMock = jest.fn().mockResolvedValueOnce(jsonResponse(200, { recoveryCodes }));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(client().confirmTwoFactorEnable({ totp: '123456' })).resolves.toEqual({
+      recoveryCodes,
+    });
+
+    const { url, init } = lastCall(fetchMock);
+    expect(url).toMatch(/\/auth\/2fa\/enable\/confirm$/);
+    expect(JSON.parse(init.body ?? '{}')).toEqual({ totp: '123456' });
+  });
+
+  it('confirmTwoFactorEnable rejects a payload without string recovery codes', async () => {
+    const fetchMock = jest.fn().mockResolvedValueOnce(jsonResponse(200, { recoveryCodes: [1, 2] }));
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(client().confirmTwoFactorEnable({ totp: '123456' })).rejects.toMatchObject({
+      code: 'UPSTREAM_UNAVAILABLE',
     });
   });
 });

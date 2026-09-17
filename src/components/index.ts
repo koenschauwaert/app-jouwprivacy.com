@@ -5,6 +5,7 @@ export { Button } from './Button';
 export { Card } from './Card';
 export { CodeInput } from './CodeInput';
 export { DisableTwoFactorSheet } from './DisableTwoFactorSheet';
+export { EnableTwoFactorSheet } from './EnableTwoFactorSheet';
 export { GlassCard, BlurTargetContext } from './GlassCard';
 export { Icon } from './icons';
 export type { IconName } from './icons';

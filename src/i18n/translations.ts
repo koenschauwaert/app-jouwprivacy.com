@@ -53,7 +53,7 @@ export const nl = {
     forgotPin: 'Pincode vergeten?',
     signOut: 'Uitloggen',
     signOutConfirm:
-      'Je gegevens op dit apparaat worden gewist. Je moet opnieuw inloggen met je e-mailadres, wachtwoord en 2FA.',
+      'Je gegevens op dit apparaat worden gewist. Je moet opnieuw inloggen met je e-mailadres, wachtwoord en, als je die gebruikt, 2FA.',
     wrongPin: 'Onjuiste pincode.',
     attemptsLeft: 'Nog {n} poging(en) over.',
     lockedOut: 'Te veel pogingen. Log opnieuw in.',
@@ -175,6 +175,27 @@ export const nl = {
     disableTwoFactorTitle: 'Tweestapsverificatie uitschakelen',
     disableTwoFactorHint: 'Voer je verificatiecode in om tweestapsverificatie uit te schakelen.',
     twoFactorDisabled: 'Tweestapsverificatie is uitgeschakeld.',
+    twoFactorOffLabel:
+      'Tweestapsverificatie staat uit. We raden je sterk aan dit aan te zetten: zonder 2FA kan iedereen die je wachtwoord kent bij je account.',
+    enableTwoFactor: '2FA inschakelen',
+    enableTwoFactorTitle: 'Tweestapsverificatie inschakelen',
+    enablePasswordHint: 'Bevestig eerst je huidige wachtwoord.',
+    continue: 'Doorgaan',
+    enableSetupHint:
+      'Voeg JouwPrivacy toe aan je authenticator-app, zoals Aegis of Ente Auth. Tik op de knop, of kopieer de sleutel en voeg die handmatig toe.',
+    openAuthenticator: 'Openen in authenticator-app',
+    noAuthenticator:
+      'Geen authenticator-app gevonden. Kopieer de sleutel en voeg die handmatig toe.',
+    secretKeyLabel: 'Sleutel',
+    copyKey: 'Sleutel kopiëren',
+    copied: 'Gekopieerd.',
+    enableCodeHint: 'Voer daarna de 6-cijferige code uit de app in.',
+    recoveryTitle: 'Bewaar je herstelcodes',
+    recoveryIntro:
+      'Bewaar deze herstelcodes op een veilige plek. Je ziet ze maar één keer. Elke code werkt één keer als je je authenticator kwijt bent.',
+    copyRecoveryCodes: 'Codes kopiëren',
+    recoverySaved: 'Ik heb mijn herstelcodes opgeslagen',
+    twoFactorEnabledNow: 'Tweestapsverificatie staat nu aan.',
     saved: 'Wijziging opgeslagen.',
   },
   tickets: {
@@ -279,7 +300,7 @@ export const en: Translations = {
     forgotPin: 'Forgot your PIN?',
     signOut: 'Log out',
     signOutConfirm:
-      'Your data on this device will be cleared. You will need to log in again with your email, password and 2FA.',
+      'Your data on this device will be cleared. You will need to log in again with your email, password and, if you use it, 2FA.',
     wrongPin: 'Wrong PIN.',
     attemptsLeft: '{n} attempt(s) left.',
     lockedOut: 'Too many attempts. Please log in again.',
@@ -400,6 +421,26 @@ export const en: Translations = {
     disableTwoFactorTitle: 'Disable two-factor authentication',
     disableTwoFactorHint: 'Enter your verification code to disable two-factor authentication.',
     twoFactorDisabled: 'Two-factor authentication has been disabled.',
+    twoFactorOffLabel:
+      'Two-factor authentication is off. We strongly recommend turning it on: without it, anyone who knows your password can get into your account.',
+    enableTwoFactor: 'Enable 2FA',
+    enableTwoFactorTitle: 'Enable two-factor authentication',
+    enablePasswordHint: 'First confirm your current password.',
+    continue: 'Continue',
+    enableSetupHint:
+      'Add JouwPrivacy to your authenticator app, such as Aegis or Ente Auth. Tap the button, or copy the key and add it manually.',
+    openAuthenticator: 'Open in authenticator app',
+    noAuthenticator: 'No authenticator app found. Copy the key and add it manually.',
+    secretKeyLabel: 'Key',
+    copyKey: 'Copy key',
+    copied: 'Copied.',
+    enableCodeHint: 'Then enter the 6-digit code from the app.',
+    recoveryTitle: 'Save your recovery codes',
+    recoveryIntro:
+      'Save these recovery codes somewhere safe. You will only see them once. Each code works once if you lose your authenticator.',
+    copyRecoveryCodes: 'Copy codes',
+    recoverySaved: 'I have saved my recovery codes',
+    twoFactorEnabledNow: 'Two-factor authentication is now on.',
     saved: 'Change saved.',
   },
   tickets: {
