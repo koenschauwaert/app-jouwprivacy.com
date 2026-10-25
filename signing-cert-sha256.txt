@@ -1,4 +1,4 @@
-# JouwPrivacy — Android signing certificate SHA-256 fingerprint
+# JouwPrivacy: Android signing certificate SHA-256 fingerprint
 #
 # This is the app's PERMANENT identity: the SAME value for every version. It
 # comes from the release signing key (jouwprivacy-release.keystore), not from any
@@ -6,8 +6,8 @@
 # key can never install over the real app.
 #
 # The release workflow (.github/workflows/release.yml) reports the built APK's
-# fingerprint on every release, and — once a real fingerprint line is present
-# below — REFUSES to publish if the built APK ever stops matching it.
+# fingerprint on every release, and (once a real fingerprint line is present
+# below) REFUSES to publish if the built APK ever stops matching it.
 #
 # To lock it, put the colon-separated fingerprint on its own line below. Get it
 # from a release's notes, or locally from the keystore:

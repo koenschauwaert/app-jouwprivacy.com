@@ -19,7 +19,7 @@ Play**, and **F-Droid / Neo Store**.
 ## Install on Android with Obtainium
 
 [Obtainium](https://github.com/ImranR98/Obtainium) installs and auto-updates
-Android apps straight from their source — for JouwPrivacy, this repo's **GitHub
+Android apps straight from their source. For JouwPrivacy that is this repo's **GitHub
 Releases**. No Google account, no Play Services, no tracking.
 
 1. Install Obtainium (from its
@@ -31,7 +31,7 @@ Releases**. No Google account, no Play Services, no tracking.
    published.
 
 Every release is built and signed in CI and ships the APK plus its **SHA-256**,
-so you can verify the download — see [`VERIFYING.md`](VERIFYING.md). How releases
+so you can verify the download: see [`VERIFYING.md`](VERIFYING.md). How releases
 are cut and signed is documented in [`RELEASING.md`](RELEASING.md).
 
 ## Privacy

@@ -56,7 +56,7 @@ expected and is not part of "is the code the same".
 ## Verify the signing certificate (authenticity)
 
 The SHA-256 above proves the bytes you downloaded match what we published. The
-**signing certificate** proves *we* built it — and it is the mechanism Obtainium
+**signing certificate** proves *we* built it, and it is the mechanism Obtainium
 and Android use to guarantee every future update comes from us and nobody else.
 
 - **Package ID:** `com.jouwprivacy.app`

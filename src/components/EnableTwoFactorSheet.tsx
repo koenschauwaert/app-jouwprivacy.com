@@ -34,7 +34,7 @@ const groupKey = (key: string) => key.match(/.{1,4}/g)?.join(' ') ?? key;
  *  1. confirm the CURRENT password (a hijacked session must not be able to
  *     plant its own authenticator);
  *  2. add the key to an authenticator app (deep link or copy) and enter the
- *     first code — 2FA only turns on once that verifies;
+ *     first code; 2FA only turns on once that verifies;
  *  3. show the recovery codes ONCE. The sheet can't be dismissed here; only the
  *     "saved" acknowledgement closes it.
  */
