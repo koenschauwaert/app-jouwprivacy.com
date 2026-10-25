@@ -7,7 +7,8 @@ name: Release APK
 #
 # Trigger: push a version tag that matches app.json's expo.version, e.g.
 #   git tag v1.0.3 && git push origin v1.0.3
-# or run it manually from the Actions tab against an existing tag.
+# or run it manually from the Actions tab against an existing tag. A manual run
+# checks out that tag, never the branch it was started from.
 
 on:
   push:
@@ -34,6 +35,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # A manual run builds the tag it was given, not the branch it was
+          # started from. A tag push checks out that tag already.
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', github.event.inputs.tag) || github.ref }}
 
       - name: Resolve & verify version
         id: ver
@@ -47,7 +52,7 @@ jobs:
           VERSION="${TAG#v}"
           APP_VERSION="$(node -p "require('./app.json').expo.version")"
           if [ "$VERSION" != "$APP_VERSION" ]; then
-            echo "::error::Tag '$TAG' (version '$VERSION') does not match app.json expo.version '$APP_VERSION'. Bump app.json (version + android.versionCode), commit, then re-tag."
+            echo "::error::Tag '$TAG' (version '$VERSION') does not match app.json expo.version '$APP_VERSION'. Bump expo.version in app.json, commit, then re-tag."
             exit 1
           fi
           echo "tag=$TAG"                       >> "$GITHUB_OUTPUT"
@@ -70,11 +75,11 @@ jobs:
         run: npm ci
 
       - name: Derive Android versionCode from version
-        # The stores' versionCode/buildNumber are owned by EAS (remote
-        # autoIncrement); this Obtainium/prebuild channel has no access to that
-        # counter, so derive its versionCode from the shared marketing version.
-        # It stays strictly increasing as long as the version increases, and is
-        # tied to the exact version iOS/Play ship — so the channels never drift.
+        # The store build number lives in app.json and is bumped by the local
+        # release script that cuts store builds. This
+        # channel signs with its own key and keeps its own counter: it derives
+        # the versionCode from the marketing version, so it only grows while the
+        # version grows. Never compare it with the store build number.
         run: |
           node -e '
             const fs = require("fs");
@@ -124,7 +129,7 @@ jobs:
           echo "Built: $SRC"
           case "$SRC" in
             *-unsigned.apk)
-              echo "::error::Gradle produced an UNSIGNED APK ($SRC) — release signing did not apply. Check the ANDROID_* secrets."
+              echo "::error::Gradle produced an UNSIGNED APK ($SRC), release signing did not apply. Check the ANDROID_* secrets."
               exit 1 ;;
           esac
           OUT="${{ steps.ver.outputs.apk }}"
@@ -141,13 +146,13 @@ jobs:
 
           # Never publish a debug-signed APK.
           if grep -qi "CN=Android Debug" certs.txt; then
-            echo "::error::APK is signed with the Android debug key — release signing did not apply. Aborting."
+            echo "::error::APK is signed with the Android debug key, release signing did not apply. Aborting."
             exit 1
           fi
 
           # The signing certificate fingerprint is the app's permanent identity:
           # ONE value for every version. Obtainium/Android pin it, and only accept
-          # updates signed by the same key — so a change here would break updates
+          # updates signed by the same key, so a change here would break updates
           # for all existing users. Extract it and format it Obtainium-style.
           RAW="$(grep -m1 -i 'SHA-256 digest' certs.txt | awk '{print $NF}')"
           if [ -z "$RAW" ]; then
@@ -160,7 +165,7 @@ jobs:
           echo "Signing cert SHA-256: $FP"
 
           # Drift guard: once signing-cert-sha256.txt contains the fingerprint, the
-          # built APK MUST match it — otherwise a silent key change would break
+          # built APK MUST match it, otherwise a silent key change would break
           # updates for every existing user. Until it is filled in, only report it.
           norm() { tr 'a-f' 'A-F' | tr -d ' \t\r\n:'; }
           PIN_FILE="signing-cert-sha256.txt"
@@ -203,23 +208,25 @@ jobs:
           CERT_SHA256: ${{ steps.sign.outputs.cert_sha256 }}
         run: |
           set -euo pipefail
-          NOTES="$(cat <<EOF
-Signed Android APK for JouwPrivacy $VERSION. Install and auto-update it with Obtainium by adding this repo as a source — see the README.
-
-**Verify this build**
-- Package ID: \`$PACKAGE_ID\`
-- SHA-256 of signing certificate: \`$CERT_SHA256\`
-- APK checksum: see the attached \`$APK.sha256\`
-
-The signing certificate above is the app's permanent identity — it is identical for every version, and Obtainium/Android only install updates signed by it. Confirm it yourself with \`apksigner verify --print-certs $APK\`. See VERIFYING.md.
-EOF
-)"
+          # Built line by line: a heredoc body at column 0 is not valid YAML
+          # inside this block, and that broke the whole workflow once.
+          NOTES_FILE="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "Signed Android APK for JouwPrivacy $VERSION. Install and auto-update it with Obtainium by adding this repo as a source, see the README."
+            echo ""
+            echo "**Verify this build**"
+            echo "- Package ID: \`$PACKAGE_ID\`"
+            echo "- SHA-256 of signing certificate: \`$CERT_SHA256\`"
+            echo "- APK checksum: see the attached \`$APK.sha256\`"
+            echo ""
+            echo "The signing certificate above is the app's permanent identity: it is identical for every version, and Obtainium and Android only install updates signed by it. Confirm it yourself with \`apksigner verify --print-certs $APK\`. See VERIFYING.md."
+          } > "$NOTES_FILE"
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" "$APK" "$APK.sha256" --clobber
-            gh release edit "$TAG" --notes "$NOTES"
+            gh release edit "$TAG" --notes-file "$NOTES_FILE"
           else
             gh release create "$TAG" "$APK" "$APK.sha256" \
               --title "JouwPrivacy $VERSION" \
-              --notes "$NOTES" \
+              --notes-file "$NOTES_FILE" \
               --verify-tag
           fi
