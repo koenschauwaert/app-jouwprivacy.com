@@ -22,6 +22,7 @@ import {
   TwoFactorEnabled,
   TwoFactorEnrolment,
   TwoFactorRequest,
+  SimPuk,
   Usage,
 } from './contract';
 import { ApiClientError } from './ApiError';
@@ -302,6 +303,13 @@ export class HttpApiClient implements ApiClient {
       'GET',
       `/subscriptions/${encodeURIComponent(subscriptionId)}/usage`,
     ).then(expectObject<Usage>);
+  }
+
+  getPuk(subscriptionId: string): Promise<SimPuk> {
+    return this.request<unknown>(
+      'GET',
+      `/subscriptions/${encodeURIComponent(subscriptionId)}/puk`,
+    ).then(expectObject<SimPuk>);
   }
 
   // Public (no bearer): our own status endpoint, reachable on api.jouwprivacy.com/v1.

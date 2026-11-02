@@ -25,12 +25,33 @@ interface SubscriptionCardProps {
   refreshSignal?: number;
 }
 
-type SheetKind = 'renew' | 'extras' | null;
+type SheetKind = 'renew' | 'extras' | 'puk' | null;
 
 /** One Home card per MSISDN. Fetches its own cached usage. */
 export function SubscriptionCard({ subscription, width, refreshSignal }: SubscriptionCardProps) {
   const { t, language } = useI18n();
   const [sheet, setSheet] = useState<SheetKind>(null);
+  // The PUK lives only while its sheet is open; closing the sheet drops it.
+  const [puk, setPuk] = useState<string | null>(null);
+  const [pukLoading, setPukLoading] = useState(false);
+
+  const showPuk = async () => {
+    setPukLoading(true);
+    try {
+      const result = await api.getPuk(subscription.id);
+      setPuk(result.puk);
+    } catch {
+      setPuk(null);
+    } finally {
+      setPukLoading(false);
+      setSheet('puk');
+    }
+  };
+
+  const closeSheet = () => {
+    setSheet(null);
+    setPuk(null);
+  };
 
   const isActive = subscription.status === 'active';
   const usageState = useAsync(
@@ -70,6 +91,16 @@ export function SubscriptionCard({ subscription, width, refreshSignal }: Subscri
 
         {isActive && subscription.planName === FREEDOM_PLAN_NAME ? <FreedomTopUp /> : null}
 
+        {isActive ? (
+          <Button
+            label={t('home.puk.button')}
+            variant="secondary"
+            loading={pukLoading}
+            style={styles.puk}
+            onPress={showPuk}
+          />
+        ) : null}
+
         {/* Grayed-out in V1; tapping opens a "coming soon" info sheet. */}
         <View style={styles.actions}>
           <Button
@@ -100,6 +131,12 @@ export function SubscriptionCard({ subscription, width, refreshSignal }: Subscri
         title={t('home.orderExtras')}
         body={t('home.extrasSoon')}
         onClose={() => setSheet(null)}
+      />
+      <InfoSheet
+        visible={sheet === 'puk'}
+        title={t('home.puk.title')}
+        body={puk ? t('home.puk.body', { puk }) : t('home.puk.failed')}
+        onClose={closeSheet}
       />
     </View>
   );
@@ -181,4 +218,5 @@ const styles = StyleSheet.create({
   lastUpdated: { textAlign: 'center', marginTop: spacing.xs },
   actions: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
   action: { flex: 1 },
+  puk: { marginTop: spacing.md },
 });

@@ -97,6 +97,12 @@ export const nl = {
     orderExtras: "Extra's bestellen",
     renewSoon: 'Verlengen komt eraan. Binnenkort kun je hier je abonnement verlengen.',
     extrasSoon: "Extra's komen eraan. Binnenkort vind je ze hier in de app.",
+    puk: {
+      button: 'PUK-code tonen',
+      title: 'Je PUK-code',
+      body: 'Je PUK-code is {puk}. Je hebt hem alleen nodig als je SIM geblokkeerd is na drie keer een verkeerde pincode.',
+      failed: 'Je PUK-code kon nu niet worden opgehaald. Probeer het later opnieuw of neem contact met ons op.',
+    },
     topUp: {
       button: 'Volle snelheid herstellen',
       helpA11y: 'Uitleg over volle snelheid herstellen',
@@ -343,6 +349,12 @@ export const en: Translations = {
     orderExtras: 'Order extras',
     renewSoon: 'Renewal is coming soon. You will be able to renew your plan here.',
     extrasSoon: 'Extras are coming soon. You will find them here in the app.',
+    puk: {
+      button: 'Show PUK code',
+      title: 'Your PUK code',
+      body: 'Your PUK code is {puk}. You only need it when your SIM is blocked after entering a wrong PIN three times.',
+      failed: 'Your PUK code could not be fetched right now. Try again later or contact us.',
+    },
     topUp: {
       button: 'Restore full speed',
       helpA11y: 'About restoring full speed',

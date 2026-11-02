@@ -118,6 +118,10 @@ export interface UsageMetric {
   fairUse: boolean;
 }
 
+export interface SimPuk {
+  puk: string;
+}
+
 export interface Usage {
   lastUpdatedAt: string; // ISO
   data: UsageMetric; // in MB
@@ -279,6 +283,11 @@ export interface ApiClient {
   getMe(): Promise<Me>;
   getSubscriptions(): Promise<Subscription[]>;
   getUsage(subscriptionId: string): Promise<Usage>;
+  /**
+   * The PUK of the caller's own active SIM, read live by the backend on each
+   * call and never cached. Rate limited server-side.
+   */
+  getPuk(subscriptionId: string): Promise<SimPuk>;
 
   /**
    * Public operational status of our technical network partner (§19). No auth;
